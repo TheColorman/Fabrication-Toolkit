@@ -41,11 +41,21 @@ class KiCadToJLCForm(wx.Frame):
         self.mExcludeDnpCheckbox = wx.CheckBox(self, label='Exclude DNP components')
         self.mExcludeDnpCheckbox.SetValue(userOptions[EXCLUDE_DNP_OPT])
 
-        self.mAdditionalLayersControl = wx.TextCtrl(self, size=wx.Size(600, 50))
+        self.mAdditionalLayersControl = wx.TextCtrl(self, size=wx.Size(600, 50), style=wx.TE_PROCESS_ENTER)
         self.mAdditionalLayersControl.Hint = "Additional layers"
         self.mAdditionalLayersControl.AutoComplete(layers)
         self.mAdditionalLayersControl.Enable()
         self.mAdditionalLayersControl.SetValue(userOptions[EXTRA_LAYERS])
+        
+        self.mAddLayerButton = wx.Button(self, label='Add layer', size=wx.Size(90, 30))
+        # self.mRemoveLayerButton = wx.Button(self, label='Remove layer', size=wx.Size(110, 30))
+
+        self.mAddedLayersList = wx.ListCtrl(self, style=wx.LC_REPORT, size=wx.Size(600, 140))
+        self.mAddedLayersList.InsertColumn(0, "Layers")
+        self.mAddedLayersList.SetColumnWidth(0, 400)
+
+        self.mAdditionalLayersControl.Bind(wx.EVT_TEXT_ENTER, self.addLayer)
+        self.mAddLayerButton.Bind(wx.EVT_BUTTON, self.addLayer)
 
         self.mGenerateButton = wx.Button(self, label='Generate', size=wx.Size(600, 60))
 
@@ -61,6 +71,8 @@ class KiCadToJLCForm(wx.Frame):
         boxSizer.Add(self.mOptionsLabel, 0, wx.ALL, 5)
         # boxSizer.Add(self.mOptionsSeparator, 0, wx.ALL, 5)
         boxSizer.Add(self.mAdditionalLayersControl, 0, wx.ALL, 5)
+        boxSizer.Add(self.mAddLayerButton, 0, wx.ALL, 5)
+        boxSizer.Add(self.mAddedLayersList, 0, wx.ALL, 5)
         boxSizer.Add(self.mAutomaticTranslation, 0, wx.ALL, 5)
         boxSizer.Add(self.mExcludeDnpCheckbox, 0, wx.ALL, 5)
         boxSizer.Add(self.mGaugeStatus, 0, wx.ALL, 5)
@@ -93,6 +105,16 @@ class KiCadToJLCForm(wx.Frame):
 
         StatusEvent.invoke(self, self.updateDisplay)
         ProcessThread(self, options)
+
+    def addLayer(self, event):
+        try:
+            val = self.mAdditionalLayersControl.Value
+            item = wx.ListItem()
+            item.SetText(val)
+            idx = self.mAddedLayersList.InsertItem(self.mAddedLayersList.GetItemCount(), val)
+            self.mAdditionalLayersControl.ChangeValue("")
+        except Exception as e:
+            log.error("", e)
 
     def updateDisplay(self, status):
         if status.data == -1:
